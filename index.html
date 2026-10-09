@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Operação em uma tela</title>
+<style>
+  :root{
+    --verde:#0b6b3a; --verde-claro:#e8f3ec; --verde-borda:#8bbf3c;
+    --azul:#0070c0; --bg:#f3f8f1; --card:#fff; --txt:#1c2b22; --mudo:#5d6f64;
+    --amarelo:#e0a100; --cinza:#c9d3cc;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0f1a14; --card:#17241c; --txt:#e6efe9; --mudo:#9bb0a3; --verde:#5fd08e; --verde-claro:#1c3326; --cinza:#2d4035; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  .wrap{max-width:1200px;margin:0 auto;padding:24px 16px 40px}
+  .eyebrow{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.08em;font-size:13px;color:var(--verde)}
+  .eyebrow:before{content:"";width:28px;height:3px;background:var(--verde-borda)}
+  h1{margin:6px 0 4px;font-size:clamp(26px,4vw,40px);color:var(--verde)}
+  .meta{display:flex;flex-wrap:wrap;gap:10px;align-items:center;color:var(--mudo);font-size:13px;margin-bottom:20px}
+  .tag{padding:2px 10px;border-radius:99px;background:var(--verde-claro);color:var(--verde);font-weight:600}
+  .tag.demo{background:#fff3cd;color:#8a6500}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  @media(max-width:900px){.grid{grid-template-columns:1fr 1fr}}
+  @media(max-width:600px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--card);border-left:4px solid var(--verde-borda);border-radius:8px;padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  .card.wide{grid-column:span 2}
+  @media(max-width:600px){.card.wide{grid-column:auto}}
+  .card h2{margin:0 0 2px;font-size:17px;color:var(--verde)}
+  .card .sub{margin:0 0 12px;font-size:13px;color:var(--mudo)}
+  .big{font-size:42px;font-weight:800;line-height:1}
+  .big small{font-size:18px;font-weight:600;color:var(--mudo)}
+  ul{list-style:none;margin:0;padding:0;font-size:14px}
+  li{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--cinza)}
+  li:last-child{border-bottom:0}
+  li span:last-child{color:var(--mudo);text-align:right}
+  .barra{margin:8px 0}
+  .barra .t{display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px}
+  .trilho{height:10px;border-radius:99px;background:var(--cinza);overflow:hidden}
+  .preench{height:100%;border-radius:99px;background:var(--verde-borda)}
+  .preench.ok{background:var(--verde)}
+  .vazio{color:var(--mudo);font-size:14px}
+  .faixa{margin-top:18px;background:var(--azul);color:#fff;border-radius:8px;padding:14px 18px;font-size:15px}
+  .erro{background:#fde8e8;color:#a11;padding:12px 16px;border-radius:8px;margin-bottom:16px;display:none}
+  .duas{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+  .duas div{background:var(--verde-claro);border-radius:6px;padding:8px 10px;font-size:13px}
+  .duas b{display:block;font-size:22px;color:var(--verde)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">DASHBOARD</div>
+  <h1>A operação em uma tela</h1>
+  <div class="meta">
+    <span id="modo" class="tag">carregando…</span>
+    <span id="atualizado"></span>
+  </div>
+  <div id="erro" class="erro"></div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Setores iniciados</h2>
+      <p class="sub">Quantos já começaram, do total</p>
+      <div class="big"><span id="iniciados">–</span> <small>de <span id="total">–</span></small></div>
+    </div>
+
+    <div class="card">
+      <h2>Setores concluídos</h2>
+      <p class="sub">Com horário de término</p>
+      <ul id="concluidos"></ul>
+    </div>
+
+    <div class="card">
+      <h2>% por setor</h2>
+      <p class="sub">Barra de avanço e média geral</p>
+      <div class="big"><span id="media">–</span><small>% média geral</small></div>
+    </div>
+
+    <div class="card">
+      <h2>Efetivo em campo</h2>
+      <p class="sub">Soma de agentes e varredores</p>
+      <div class="big" id="efetivoTotal">–</div>
+      <div class="duas">
+        <div><b id="agentes">–</b>agentes</div>
+        <div><b id="varredores">–</b>varredores</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Veículos</h2>
+      <p class="sub">Tipo e placa por setor</p>
+      <ul id="veiculos"></ul>
+    </div>
+
+    <div class="card">
+      <h2>Aguardando instrução</h2>
+      <p class="sub">Equipes livres para apoio</p>
+      <ul id="livres"></ul>
+    </div>
+
+    <div class="card wide" style="grid-column:1/-1">
+      <h2>Avanço por setor</h2>
+      <p class="sub">Percentual executado em cada setor</p>
+      <div id="barras"></div>
+    </div>
+  </div>
+
+  <div class="faixa" id="faixa">Os dados vêm direto da planilha e se atualizam sozinhos a cada 30 segundos.</div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const num = (v) => { const n = parseFloat(String(v ?? "").replace("%","").replace(",",".")); return isNaN(n) ? 0 : n; };
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const norm = (s) => String(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").trim();
+
+function lista(el, itens, vazio) {
+  el.innerHTML = itens.length ? itens.join("") : `<li class="vazio">${vazio}</li>`;
+}
+
+function render(d) {
+  const setores = d.setores || [];
+  const st = (s) => norm(s.status);
+  const concl = setores.filter((s) => st(s) === "concluido");
+  const iniciados = setores.filter((s) => st(s) !== "nao iniciado" && st(s) !== "");
+
+  $("iniciados").textContent = iniciados.length;
+  $("total").textContent = setores.length;
+
+  lista($("concluidos"),
+    concl.map((s) => `<li><span>${esc(s.setor)}</span><span>${esc(s.termino || "—")}</span></li>`),
+    "Nenhum setor concluído ainda");
+
+  const pct = setores.map((s) => Math.min(100, Math.max(0, num(s.percentual))));
+  const media = pct.length ? pct.reduce((a, b) => a + b, 0) / pct.length : 0;
+  $("media").textContent = media.toFixed(0);
+
+  $("barras").innerHTML = setores.map((s, i) => `
+    <div class="barra">
+      <div class="t"><span>${esc(s.setor)}</span><b>${pct[i].toFixed(0)}%</b></div>
+      <div class="trilho"><div class="preench ${pct[i] >= 100 ? "ok" : ""}" style="width:${pct[i]}%"></div></div>
+    </div>`).join("") || '<div class="vazio">Sem setores cadastrados</div>';
+
+  const ag = (d.efetivo || []).reduce((a, e) => a + num(e.agentes), 0);
+  const va = (d.efetivo || []).reduce((a, e) => a + num(e.varredores), 0);
+  $("agentes").textContent = ag;
+  $("varredores").textContent = va;
+  $("efetivoTotal").textContent = ag + va;
+
+  lista($("veiculos"),
+    (d.veiculos || []).map((v) => `<li><span>${esc(v.setor)}</span><span>${esc(v.tipo)} · ${esc(v.placa)}</span></li>`),
+    "Nenhum veículo lançado");
+
+  lista($("livres"),
+    (d.livres || []).map((e) => `<li><span>${esc(e.equipe)}</span><span>${esc(e.observacao)}</span></li>`),
+    "Nenhuma equipe aguardando");
+
+  const m = $("modo");
+  m.textContent = d.modo === "demo" ? "Dados de exemplo (modo demo)" : "Ligado à planilha";
+  m.className = "tag" + (d.modo === "demo" ? " demo" : "");
+  $("atualizado").textContent = "Atualizado às " + new Date(d.atualizado).toLocaleTimeString("pt-BR");
+}
+
+async function carregar() {
+  try {
+    const r = await fetch("/api/dados", { cache: "no-store" });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.erro || "Falha ao carregar");
+    $("erro").style.display = "none";
+    render(d);
+  } catch (e) {
+    $("erro").textContent = "Não foi possível atualizar: " + e.message;
+    $("erro").style.display = "block";
+  }
+}
+carregar();
+setInterval(carregar, 30000);
+</script>
+</body>
+</html>
